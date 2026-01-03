@@ -87,7 +87,7 @@
         }
 
         .window-header {
-            height: 40px;
+            height: 40px; min-height: 40px;
             background: linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 45%, rgba(255,255,255,0.0) 100%);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 12px; cursor: default;
@@ -166,7 +166,6 @@
                 inset 0 0 12px rgba(255,255,255,0.9); 
             transform: scale(1.02);
         }
-        /* Estado Activo (Clic o Menú Abierto) */
         .start-orb:active, .start-orb.active {
             filter: brightness(0.9);
             box-shadow: 
@@ -201,7 +200,6 @@
             display: none; flex-direction: row;
             border-radius: 12px 12px 12px 0; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.15);
-            /* Animación suave */
             transform-origin: bottom left;
             animation: startMenuOpen 0.25s cubic-bezier(0.19, 1, 0.22, 1);
         }
@@ -221,9 +219,7 @@
         }
         .start-item:hover { background: linear-gradient(to bottom, #f3f9ff 0%, #cfeaff 100%); border: 1px solid #99c9ef; box-shadow: inset 0 0 2px white; }
 
-        /* --- APP ESPECÍFICAS MEJORADAS --- */
-
-        /* Reproductor WaveTunes - SIMPLIFICADO */
+        /* --- APP ESPECÍFICAS --- */
         .player-simple {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100%; background: linear-gradient(to bottom, #f0f9ff 0%, #cbebff 100%);
@@ -237,6 +233,7 @@
             margin-bottom: 25px; margin-top: 10px;
             animation: spin 8s linear infinite; animation-play-state: paused;
             position: relative;
+            flex-shrink: 0;
         }
         .simple-disc::after {
             content: ''; position: absolute; inset: 40%; background: #e0f9ff; border-radius: 50%;
@@ -245,13 +242,12 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
         .player-controls-simple {
-            width: 100%; margin-top: auto;
+            width: 100%; max-width: 300px; margin-top: auto;
             background: rgba(255,255,255,0.5);
             padding: 15px; border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.6);
         }
 
-        /* Galería Prism */
         .gallery-layout { display: flex; flex-direction: column; height: 100%; background: #222; }
         .gallery-preview { 
             flex: 1; display: flex; align-items: center; justify-content: center; 
@@ -259,15 +255,14 @@
         }
         .gallery-preview img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         .gallery-strip { 
-            height: 100px; background: #333; display: flex; align-items: center; gap: 10px; padding: 10px; overflow-x: auto;
+            height: 100px; background: #333; display: flex; align-items: center; gap: 10px; padding: 10px; overflow-x: auto; flex-shrink: 0;
         }
         .thumb { 
             width: 80px; height: 80px; object-fit: cover; border: 2px solid transparent; 
-            cursor: pointer; opacity: 0.7; transition: all 0.2s;
+            cursor: pointer; opacity: 0.7; transition: all 0.2s; flex-shrink: 0;
         }
         .thumb:hover, .thumb.active { border-color: #00ccff; opacity: 1; transform: scale(1.05); }
 
-        /* Ajustes Nexus */
         .settings-sidebar-item {
             padding: 15px; border-bottom: 1px solid #ddd; cursor: pointer; display: flex; align-items: center; gap: 10px;
             color: #444; background: linear-gradient(to right, #f9f9f9, #eee);
@@ -283,9 +278,7 @@
 
         /* Estilos App Info */
         .info-article {
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.7;
+            max-width: 800px; margin: 0 auto; line-height: 1.7;
         }
         .info-header {
             background: linear-gradient(135deg, #0078d7 0%, #00bcf2 100%);
@@ -315,11 +308,69 @@
         ::-webkit-scrollbar-thumb { background: #aaa; border-radius: 4px; }
         ::-webkit-scrollbar-track { background: #eee; }
 
-        /* Media Queries */
+        /* --- MEDIA QUERIES PARA MÓVIL (MEJORADO) --- */
         @media (max-width: 768px) {
-            .aero-glass:not(#start-menu) { width: 96% !important; left: 2% !important; top: 10px !important; height: calc(100% - 70px) !important; }
-            #start-menu { width: 96% !important; left: 2% !important; bottom: 60px !important; }
-            .start-right { display: none; } .start-left { width: 100% !important; border-right: none !important; }
+            /* Ventanas en pantalla completa */
+            .aero-glass:not(#start-menu) {
+                width: 100% !important; 
+                height: calc(100% - 54px) !important; 
+                top: 0 !important; 
+                left: 0 !important;
+                border-radius: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .window-header {
+                border-radius: 0 !important;
+                padding-top: 10px; /* Safe area for status bars */
+            }
+            
+            /* Menú Inicio Adaptado */
+            #start-menu { 
+                width: 96% !important; 
+                left: 2% !important; 
+                bottom: 60px !important; 
+                height: 70% !important;
+            }
+            .start-right { display: none; } 
+            .start-left { width: 100% !important; border-right: none !important; }
+
+            /* Ajustes de Apps Específicas */
+            #win-calc .window-content > div {
+                max-width: 320px;
+                margin: 0 auto;
+                height: 100%;
+                justify-content: center;
+            }
+            
+            /* Navegación de Ajustes en Móvil */
+            .settings-container {
+                flex-direction: column !important;
+            }
+            .settings-sidebar {
+                width: 100% !important;
+                flex-direction: row !important;
+                overflow-x: auto !important;
+                border-right: none !important;
+                border-bottom: 1px solid #ddd !important;
+                padding: 0 !important;
+                flex-shrink: 0;
+            }
+            .settings-sidebar-item {
+                flex: 0 0 auto;
+                padding: 12px 20px;
+                border-bottom: none !important;
+                border-right: 1px solid #eee;
+                background: white;
+            }
+            .settings-sidebar-item.active {
+                border-left: none !important;
+                border-bottom: 3px solid #0066cc !important;
+                color: #0066cc;
+            }
+            .settings-content {
+                width: 100% !important;
+            }
         }
     </style>
 </head>
@@ -390,7 +441,7 @@
         <div class="desktop-icon" onclick="openWindow('player')"><div class="icon-img"><i class="fas fa-compact-disc" style="background:linear-gradient(135deg,#aaa,#fff); -webkit-background-clip:text;"></i></div><div class="icon-label">Música</div></div>
     </div>
 
-    <!-- WINDOW: REPRODUCTOR DE MÚSICA (WaveTunes) - SIMPLIFICADO -->
+    <!-- WINDOW: REPRODUCTOR DE MÚSICA (WaveTunes) -->
     <div id="win-player" class="aero-glass" style="width: 340px; height: 480px; top: 50px; left: 300px; display: none;">
         <div class="window-header">
             <div class="window-title"><i class="fas fa-music text-blue-500"></i> WaveTunes</div>
@@ -465,8 +516,9 @@
                 <div class="win-btn btn-close" onclick="closeWindow('settings')">×</div>
             </div>
         </div>
-        <div class="window-content" style="padding:0; margin:0; border:none; background: #f0f4fa; display: flex;">
-            <div class="w-1/3 bg-white border-r border-gray-200 flex flex-col pt-2">
+        <!-- Contenedor adaptado con clases para móvil -->
+        <div class="window-content settings-container" style="padding:0; margin:0; border:none; background: #f0f4fa; display: flex;">
+            <div class="settings-sidebar w-1/3 bg-white border-r border-gray-200 flex flex-col pt-2">
                 <div class="settings-sidebar-item active" onclick="switchTab('personalization')">
                     <i class="fas fa-paint-brush text-xl"></i> <div>Apariencia</div>
                 </div>
@@ -477,7 +529,7 @@
                     <i class="fas fa-users text-xl"></i> <div>Cuentas</div>
                 </div>
             </div>
-            <div class="w-2/3 p-4 overflow-y-auto">
+            <div class="settings-content w-2/3 p-4 overflow-y-auto">
                 <div id="tab-personalization" class="settings-section">
                     <h2 class="text-xl text-blue-700 mb-4 border-b pb-2">Personalización</h2>
                     <div class="setting-card">
@@ -544,26 +596,28 @@
             </div>
         </div>
         <div class="window-content bg-gray-100 p-2 flex flex-col gap-2">
-             <div id="calc-display" class="bg-white border border-gray-300 h-10 rounded text-right p-2 text-xl font-mono mb-1 shadow-inner">0</div>
-             <div class="grid grid-cols-4 gap-1 flex-1">
-                 <button class="glossy-btn p-0 text-xs" onclick="calcInput('C')">C</button>
-                 <button class="glossy-btn p-0 text-xs" onclick="calcInput('/')">/</button>
-                 <button class="glossy-btn p-0 text-xs" onclick="calcInput('*')">x</button>
-                 <button class="glossy-btn p-0 text-xs" onclick="calcInput('-')">-</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('7')">7</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('8')">8</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('9')">9</button>
-                 <button class="glossy-btn p-0" onclick="calcInput('+')">+</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('4')">4</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('5')">5</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('6')">6</button>
-                 <button class="glossy-btn p-0 bg-yellow-100" onclick="calcInput('=')" style="grid-row:span 3">=</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('1')">1</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('2')">2</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('3')">3</button>
-                 <button class="glossy-btn p-0 font-bold col-span-2" onclick="calcInput('0')">0</button>
-                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('.')">.</button>
-             </div>
+             <div class="w-full h-full flex flex-col max-w-sm mx-auto"> <!-- Wrapper para centrar en móvil -->
+                 <div id="calc-display" class="bg-white border border-gray-300 h-10 rounded text-right p-2 text-xl font-mono mb-1 shadow-inner flex-shrink-0">0</div>
+                 <div class="grid grid-cols-4 gap-1 flex-1">
+                     <button class="glossy-btn p-0 text-xs" onclick="calcInput('C')">C</button>
+                     <button class="glossy-btn p-0 text-xs" onclick="calcInput('/')">/</button>
+                     <button class="glossy-btn p-0 text-xs" onclick="calcInput('*')">x</button>
+                     <button class="glossy-btn p-0 text-xs" onclick="calcInput('-')">-</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('7')">7</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('8')">8</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('9')">9</button>
+                     <button class="glossy-btn p-0" onclick="calcInput('+')">+</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('4')">4</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('5')">5</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('6')">6</button>
+                     <button class="glossy-btn p-0 bg-yellow-100" onclick="calcInput('=')" style="grid-row:span 3">=</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('1')">1</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('2')">2</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('3')">3</button>
+                     <button class="glossy-btn p-0 font-bold col-span-2" onclick="calcInput('0')">0</button>
+                     <button class="glossy-btn p-0 font-bold" onclick="calcInput('.')">.</button>
+                 </div>
+            </div>
         </div>
     </div>
     
@@ -757,6 +811,9 @@
         function minimizeWindow(id) { document.getElementById(`win-${id}`).style.display = 'none'; }
         function maximizeWindow(id) {
             const win = document.getElementById(`win-${id}`);
+            // En móvil, la maximización es automática, pero conservamos la lógica para desktop
+            if(window.innerWidth <= 768) return; 
+            
             bringToFront(win);
             if (!windowStates[id]) windowStates[id] = { isMaximized: false };
             if (windowStates[id].isMaximized) {
@@ -820,14 +877,14 @@
         }
         function removeTaskbarItem(id) { const i = document.getElementById(`task-${id}`); if(i) i.remove(); }
 
-        /* Draggable */
+        /* Draggable - Desactivado en móvil */
         function setupDraggables() {
             document.querySelectorAll('.aero-glass').forEach(win => {
                 const h = win.querySelector('.window-header');
                 win.addEventListener('mousedown', () => bringToFront(win));
                 if(h) {
                     h.addEventListener('mousedown', e => {
-                        if(win.classList.contains('maximized')) return;
+                        if(win.classList.contains('maximized') || window.innerWidth <= 768) return; // Bloquear en móvil
                         e.preventDefault();
                         const shiftX = e.clientX - win.getBoundingClientRect().left;
                         const shiftY = e.clientY - win.getBoundingClientRect().top;
