@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frutiger Aero Web OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- ESTÉTICA FRUTIGER AERO / WINDOWS 7 --- */
+        
+        @font-face {
+            font-family: 'Segoe UI Local';
+            src: local('Segoe UI'), local('Verdana');
+        }
+
+        body {
+            font-family: 'Segoe UI Local', sans-serif;
+            overflow: hidden;
+            background-color: #000;
+            background-image: url('all_assets/windows_7_style_aurora_abstract_background.png'); 
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease, background-color 0.5s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- PANTALLA DE LOGIN --- */
+        #login-screen {
+            position: absolute; inset: 0; z-index: 20000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at center, #0f3661 0%, #051426 100%);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        #login-screen.hidden-login {
+            opacity: 0; transform: scale(1.1); pointer-events: none;
+        }
+        
+        /* Icono de Usuario Generado */
+        .user-avatar-login {
+            width: 160px; height: 160px; border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.8);
+            box-shadow: 0 0 50px rgba(0,150,255,0.6);
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #e0f2f1 0%, #b2ebf2 100%);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .user-avatar-login i {
+            font-size: 80px; color: #00bcd4;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+        }
+        .user-avatar-login:hover { transform: scale(1.05); box-shadow: 0 0 70px rgba(0,200,255,0.8); }
+        
+        .login-btn {
+            background: linear-gradient(to bottom, #50b1e9 0%, #006eb9 100%);
+            border: 1px solid #00508a; border-radius: 30px;
+            padding: 12px 50px; display: flex; align-items: center; justify-content: center; gap: 10px;
+            color: white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-weight: bold; font-size: 16px; transition: all 0.2s;
+        }
+        .login-btn:hover { filter: brightness(1.2); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,150,255,0.4); }
+        .login-btn:active { transform: translateY(0); }
+
+        /* --- ESTILO DE VENTANAS (Aero Glass) --- */
+        .aero-glass {
+            background: rgba(240, 248, 255, 0.75);
+            backdrop-filter: blur(25px) saturate(120%);
+            -webkit-backdrop-filter: blur(25px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-top: 1px solid rgba(255, 255, 255, 0.7);
+            border-left: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.5), 
+                0 20px 50px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            position: absolute;
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .maximized {
+            border-radius: 0 !important; top: 0 !important; left: 0 !important;
+            width: 100% !important; height: calc(100% - 54px) !important;
+        }
+
+        .window-header {
+            height: 40px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 45%, rgba(255,255,255,0.0) 100%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 12px; cursor: default;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            text-shadow: 0 0 10px rgba(255,255,255,1);
+        }
+        .window-title { color: #222; text-shadow: 0 0 5px rgba(255,255,255,0.8); font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .win-controls { display: flex; gap: 8px; }
+        .win-btn {
+            width: 32px; height: 24px; border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            font-size: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+            cursor: pointer; transition: all 0.1s;
+        }
+        .btn-close { background: linear-gradient(to bottom, #ff9999, #ff5555); color: white; border-color: #cc4444; }
+        .btn-min, .btn-max { background: linear-gradient(to bottom, #ffffff, #e0e0e0); color: #444; border-color: #999; }
+        .window-content {
+            flex: 1; background-color: rgba(255, 255, 255, 0.9);
+            margin: 0 8px 8px 8px; border: 1px solid rgba(150, 150, 150, 0.3);
+            overflow: auto; position: relative;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* --- ELEMENTOS DE UI --- */
+        .glossy-btn {
+            background: linear-gradient(to bottom, #e0f3fa 0%, #bce0ee 50%, #8bcbe4 51%, #a4d9ed 100%);
+            border: 1px solid #5c9dbf; border-radius: 8px;
+            color: #0e4e75; padding: 12px 20px; font-size: 14px; font-weight: 700;
+            cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.8);
+            transition: all 0.2s; text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+        }
+        .glossy-btn:active { transform: translateY(2px); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); }
+
+        .desktop-icon {
+            width: 96px; display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; margin: 15px; padding: 10px; border-radius: 8px; transition: background 0.2s;
+        }
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        }
+        .icon-img {
+            width: 60px; height: 60px; margin-bottom: 8px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.4));
+            display: flex; align-items: center; justify-content: center; font-size: 38px; color: white;
+            transition: transform 0.2s;
+        }
+        .desktop-icon:hover .icon-img { transform: scale(1.1); }
+        .icon-label { color: white; text-align: center; font-size: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); line-height: 1.2; font-weight: 500; }
+
+        /* --- BARRA DE TAREAS --- */
+        #taskbar {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 54px;
+            background: linear-gradient(to bottom, rgba(10, 30, 60, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);
+            backdrop-filter: blur(30px); border-top: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.4); display: flex; align-items: center; z-index: 9999; padding: 0 10px;
+        }
+        
+        /* BOTÓN DE INICIO MEJORADO */
+        .start-orb {
+            width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+            background: radial-gradient(circle at 50% 50%, #30e3ee 0%, #1e69de 50%, #0c2b64 100%);
+            border: 1px solid rgba(0,0,0,0.3);
+            box-shadow: 
+                0 0 8px rgba(30, 105, 222, 0.5), 
+                inset 0 1px 0 rgba(255,255,255,0.6),
+                inset 0 0 10px rgba(0,255,255,0.4);
+            position: relative; cursor: pointer; margin-right: 15px; margin-left: 5px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease-out;
+            z-index: 10001; /* Asegura que esté por encima de la barra */
+        }
+        .start-orb:hover { 
+            filter: brightness(1.15); 
+            box-shadow: 
+                0 0 15px rgba(43, 219, 230, 0.7), 
+                inset 0 0 12px rgba(255,255,255,0.9); 
+            transform: scale(1.02);
+        }
+        /* Estado Activo (Clic o Menú Abierto) */
+        .start-orb:active, .start-orb.active {
+            filter: brightness(0.9);
+            box-shadow: 
+                inset 0 3px 8px rgba(0,0,0,0.5),
+                0 0 5px rgba(255,255,255,0.2);
+            transform: scale(0.95) translateY(1px);
+            background: radial-gradient(circle at 50% 50%, #1e69de 0%, #0c2b64 100%);
+        }
+        .start-orb::after {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="white" d="M12,12 L43,12 L43,43 L12,43 Z M57,12 L88,12 L88,43 L57,43 Z M12,57 L43,57 L43,88 L12,88 Z M57,57 L88,57 L88,88 L57,88 Z" opacity="0.9" style="filter:drop-shadow(0 0 4px rgba(255,255,255,0.6));"/></svg>');
+            background-size: 55%; background-repeat: no-repeat; background-position: center; 
+        }
+
+        .task-item {
+            height: 42px; min-width: 50px; margin-right: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; padding: 0 10px; cursor: pointer; transition: all 0.3s;
+            background: rgba(255,255,255,0.05); border: 1px solid transparent;
+        }
+        .task-item:hover { background: rgba(255,255,255,0.15); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .task-item.active {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+            border: 1px solid rgba(255,255,255,0.4); box-shadow: inset 0 0 5px rgba(255,255,255,0.2), 0 0 8px rgba(100,200,255,0.4);
+        }
+        .task-item i { font-size: 20px; background: linear-gradient(135deg, #fff, #cceeff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .task-text { color: white; font-size: 13px; text-shadow: 0 1px 2px black; margin-left: 8px; font-weight: 500; }
+        .tray { margin-left: auto; display: flex; align-items: center; gap: 12px; color: white; font-size: 12px; }
+
+        /* --- MENÚ INICIO ANIMADO --- */
+        #start-menu {
+            position: absolute; bottom: 58px; left: 0;
+            width: 420px; height: 520px; z-index: 10000;
+            display: none; flex-direction: row;
+            border-radius: 12px 12px 12px 0; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.15);
+            /* Animación suave */
+            transform-origin: bottom left;
+            animation: startMenuOpen 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        @keyframes startMenuOpen {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .start-left { width: 60%; background: white; padding: 12px; display: flex; flex-direction: column; overflow-y: auto; }
+        .start-right { width: 40%; background: linear-gradient(to right, #dceefc 0%, #bfdfff 100%); padding: 12px; color: #1e395b; display: flex; flex-direction: column; border-left: 1px solid rgba(255,255,255,0.5); }
+        
+        .start-item {
+            padding: 10px; display: flex; align-items: center; gap: 12px;
+            border-radius: 6px; cursor: pointer; margin-bottom: 2px;
+            color: #333; font-size: 14px; transition: all 0.1s;
+        }
+        .start-item:hover { background: linear-gradient(to bottom, #f3f9ff 0%, #cfeaff 100%); border: 1px solid #99c9ef; box-shadow: inset 0 0 2px white; }
+
+        /* --- APP ESPECÍFICAS MEJORADAS --- */
+
+        /* Reproductor WaveTunes - SIMPLIFICADO */
+        .player-simple {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; background: linear-gradient(to bottom, #f0f9ff 0%, #cbebff 100%);
+            padding: 20px; text-align: center;
+        }
+        .simple-disc {
+            width: 200px; height: 200px; border-radius: 50%;
+            background: url('all_assets/frutiger_aero_aesthetic_collage.png') center/cover;
+            border: 6px solid rgba(255,255,255,0.9);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 25px; margin-top: 10px;
+            animation: spin 8s linear infinite; animation-play-state: paused;
+            position: relative;
+        }
+        .simple-disc::after {
+            content: ''; position: absolute; inset: 40%; background: #e0f9ff; border-radius: 50%;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .player-controls-simple {
+            width: 100%; margin-top: auto;
+            background: rgba(255,255,255,0.5);
+            padding: 15px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        /* Galería Prism */
+        .gallery-layout { display: flex; flex-direction: column; height: 100%; background: #222; }
+        .gallery-preview { 
+            flex: 1; display: flex; align-items: center; justify-content: center; 
+            background: #000; overflow: hidden; border-bottom: 1px solid #444;
+        }
+        .gallery-preview img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .gallery-strip { 
+            height: 100px; background: #333; display: flex; align-items: center; gap: 10px; padding: 10px; overflow-x: auto;
+        }
+        .thumb { 
+            width: 80px; height: 80px; object-fit: cover; border: 2px solid transparent; 
+            cursor: pointer; opacity: 0.7; transition: all 0.2s;
+        }
+        .thumb:hover, .thumb.active { border-color: #00ccff; opacity: 1; transform: scale(1.05); }
+
+        /* Ajustes Nexus */
+        .settings-sidebar-item {
+            padding: 15px; border-bottom: 1px solid #ddd; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            color: #444; background: linear-gradient(to right, #f9f9f9, #eee);
+        }
+        .settings-sidebar-item:hover, .settings-sidebar-item.active {
+            background: white; color: #0066cc; border-left: 4px solid #0066cc;
+        }
+        .setting-card {
+            background: white; border: 1px solid #ccc; border-radius: 6px; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .styled-range { width: 100%; }
+
+        /* Estilos App Info */
+        .info-article {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+        .info-header {
+            background: linear-gradient(135deg, #0078d7 0%, #00bcf2 100%);
+            color: white; padding: 30px; border-radius: 8px; margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative; overflow: hidden;
+        }
+        .info-header::after {
+            content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px;
+            background: rgba(255,255,255,0.1); border-radius: 50%;
+        }
+        .info-section {
+            background: white; padding: 25px; border-radius: 8px; margin-bottom: 15px;
+            border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .info-tag {
+            display: inline-block; background: #e1f5fe; color: #0277bd;
+            padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-right: 5px; margin-bottom: 5px;
+        }
+        .info-quote {
+            border-left: 4px solid #00bcf2; background: #f0f9ff;
+            padding: 10px 15px; font-style: italic; color: #444; margin: 10px 0;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #aaa; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #eee; }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .aero-glass:not(#start-menu) { width: 96% !important; left: 2% !important; top: 10px !important; height: calc(100% - 70px) !important; }
+            #start-menu { width: 96% !important; left: 2% !important; bottom: 60px !important; }
+            .start-right { display: none; } .start-left { width: 100% !important; border-right: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE INICIO DE SESIÓN -->
+    <div id="login-screen">
+        <div class="user-avatar-login" onclick="login()">
+            <i class="fas fa-user-astronaut"></i>
+        </div>
+        <h2 class="text-white text-3xl font-light mb-8 drop-shadow-md">Bienvenido</h2>
+        
+        <div class="login-btn" onclick="login()">
+            Iniciar Sesión <i class="fas fa-chevron-right ml-2"></i>
+        </div>
+        <p class="text-white/60 mt-10 text-sm tracking-wider">FRUTIGER AERO OS</p>
+    </div>
+
+    <!-- MENÚ INICIO -->
+    <div id="start-menu" class="aero-glass" style="display: none;">
+        <div class="start-left">
+            <!-- Apps List -->
+            <div class="start-item p-3 flex items-center gap-3 hover:bg-blue-50 rounded cursor-pointer" onclick="openWindow('info')">
+                <i class="fas fa-globe-americas text-blue-600 text-xl w-6 text-center"></i>
+                <div><div class="font-bold text-sm">AeroVerse</div><div class="text-xs text-gray-500">Enciclopedia Aero</div></div>
+            </div>
+            <div class="start-item p-3 flex items-center gap-3 hover:bg-blue-50 rounded cursor-pointer" onclick="openWindow('settings')">
+                <i class="fas fa-cog text-gray-600 text-xl w-6 text-center"></i>
+                <div><div class="font-bold text-sm">Nexus System</div><div class="text-xs text-gray-500">Configuración</div></div>
+            </div>
+            <div class="start-item p-3 flex items-center gap-3 hover:bg-blue-50 rounded cursor-pointer" onclick="openWindow('gallery')">
+                <i class="fas fa-images text-orange-500 text-xl w-6 text-center"></i>
+                <div><div class="font-bold text-sm">Prism Gallery</div><div class="text-xs text-gray-500">Fotos y Recuerdos</div></div>
+            </div>
+            <div class="start-item p-3 flex items-center gap-3 hover:bg-blue-50 rounded cursor-pointer" onclick="openWindow('player')">
+                <i class="fas fa-music text-pink-500 text-xl w-6 text-center"></i>
+                <div><div class="font-bold text-sm">WaveTunes</div><div class="text-xs text-gray-500">Música</div></div>
+            </div>
+            <div class="start-item p-3 flex items-center gap-3 hover:bg-blue-50 rounded cursor-pointer" onclick="openWindow('calc')">
+                <i class="fas fa-calculator text-green-600 text-xl w-6 text-center"></i>
+                <div><div class="font-bold text-sm">Quantum Calc</div><div class="text-xs text-gray-500">Utilidades</div></div>
+            </div>
+
+            <div class="mt-auto border-t pt-2 text-xs font-bold text-gray-500 pl-2 cursor-pointer">Todos los programas ▶</div>
+        </div>
+        <div class="start-right">
+            <div class="flex flex-col items-end mb-4">
+                 <div class="w-16 h-16 bg-blue-100 rounded-lg border-2 border-white shadow-md flex items-center justify-center text-blue-500 text-3xl overflow-hidden">
+                     <i class="fas fa-user-astronaut"></i>
+                 </div>
+            </div>
+            <div class="text-right text-sm font-semibold text-gray-700 hover:text-black cursor-pointer py-1">Documentos</div>
+            <div class="text-right text-sm font-semibold text-gray-700 hover:text-black cursor-pointer py-1">Imágenes</div>
+            <div class="text-right text-sm font-semibold text-gray-700 hover:text-black cursor-pointer py-1">Música</div>
+            <div class="h-px bg-gray-400/50 my-2 w-full"></div>
+            <div class="text-right text-sm font-semibold text-gray-700 hover:text-black cursor-pointer py-1">Equipo</div>
+            <div class="mt-auto self-end">
+                <button class="bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-1 rounded shadow text-xs font-bold border border-yellow-500" onclick="location.reload()">Apagar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESCRITORIO -->
+    <div id="desktop" class="absolute inset-0 flex flex-col flex-wrap content-start p-4 z-0 gap-2 pb-16">
+        <div class="desktop-icon" onclick="openWindow('info')"><div class="icon-img"><i class="fas fa-globe-americas text-blue-400" style="background:none;-webkit-text-fill-color: #4facfe;"></i></div><div class="icon-label">AeroVerse</div></div>
+        <div class="desktop-icon" onclick="openWindow('settings')"><div class="icon-img"><i class="fas fa-sliders-h" style="background:linear-gradient(135deg,#ccc,#999); -webkit-background-clip:text;"></i></div><div class="icon-label">Ajustes</div></div>
+        <div class="desktop-icon" onclick="openWindow('gallery')"><div class="icon-img"><i class="fas fa-folder-open text-yellow-400" style="background:none;-webkit-text-fill-color: #fce883;"></i></div><div class="icon-label">Galería</div></div>
+        <div class="desktop-icon" onclick="openWindow('player')"><div class="icon-img"><i class="fas fa-compact-disc" style="background:linear-gradient(135deg,#aaa,#fff); -webkit-background-clip:text;"></i></div><div class="icon-label">Música</div></div>
+    </div>
+
+    <!-- WINDOW: REPRODUCTOR DE MÚSICA (WaveTunes) - SIMPLIFICADO -->
+    <div id="win-player" class="aero-glass" style="width: 340px; height: 480px; top: 50px; left: 300px; display: none;">
+        <div class="window-header">
+            <div class="window-title"><i class="fas fa-music text-blue-500"></i> WaveTunes</div>
+            <div class="win-controls">
+                <div class="win-btn btn-min" onclick="minimizeWindow('player')">_</div>
+                <div class="win-btn btn-max" onclick="maximizeWindow('player')">□</div>
+                <div class="win-btn btn-close" onclick="closeWindow('player')">×</div>
+            </div>
+        </div>
+        <div class="window-content" style="padding:0; margin:0; border:none;">
+            <div class="player-simple">
+                <div id="album-disc" class="simple-disc"></div>
+                
+                <h2 class="text-xl font-bold text-gray-800">Neon Horizons</h2>
+                <p class="text-blue-500 text-sm mb-4">Aero Mix 2026</p>
+
+                <div class="player-controls-simple">
+                    <div class="w-full bg-gray-300 h-2 mb-4 rounded-full overflow-hidden border border-gray-400">
+                        <div id="progress-fill" class="h-full bg-gradient-to-r from-blue-400 to-cyan-500 w-0"></div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center px-4">
+                         <button class="text-gray-500 hover:text-blue-600 transition"><i class="fas fa-random"></i></button>
+                         <div class="flex gap-4 items-center">
+                            <i class="fas fa-step-backward text-2xl text-gray-600 hover:text-blue-600 cursor-pointer"></i>
+                            <button id="play-btn" class="w-14 h-14 rounded-full bg-gradient-to-b from-blue-400 to-blue-600 text-white shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition border-2 border-white" onclick="togglePlay()">
+                                <i class="fas fa-play ml-1 text-xl"></i>
+                            </button>
+                            <i class="fas fa-step-forward text-2xl text-gray-600 hover:text-blue-600 cursor-pointer"></i>
+                         </div>
+                         <button class="text-gray-500 hover:text-blue-600 transition"><i class="fas fa-redo"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WINDOW: GALERÍA (Prism Gallery) -->
+    <div id="win-gallery" class="aero-glass" style="width: 500px; height: 450px; top: 80px; left: 150px; display: none;">
+        <div class="window-header">
+            <div class="window-title"><i class="fas fa-images text-orange-500"></i> Prism Gallery</div>
+            <div class="win-controls">
+                <div class="win-btn btn-min" onclick="minimizeWindow('gallery')">_</div>
+                <div class="win-btn btn-max" onclick="maximizeWindow('gallery')">□</div>
+                <div class="win-btn btn-close" onclick="closeWindow('gallery')">×</div>
+            </div>
+        </div>
+        <div class="window-content" style="padding:0; margin:0; border:none;">
+            <div class="gallery-layout">
+                <div class="gallery-preview">
+                    <img id="preview-img" src="all_assets/windows_7_style_aurora_abstract_background.png" alt="Preview">
+                </div>
+                <div class="gallery-strip">
+                    <img src="all_assets/windows_7_style_aurora_abstract_background.png" class="thumb active" onclick="setPreview(this)">
+                    <img src="all_assets/frutiger_aero_aesthetic_collage.png" class="thumb" onclick="setPreview(this)">
+                    <img src="all_assets/IMG-20251231-WA0015_1767228117468.jpg" class="thumb" onclick="setPreview(this)">
+                    <img src="https://picsum.photos/id/10/1920/1080" class="thumb" onclick="setPreview(this)">
+                    <img src="https://picsum.photos/id/16/1920/1080" class="thumb" onclick="setPreview(this)">
+                    <img src="https://picsum.photos/id/54/1920/1080" class="thumb" onclick="setPreview(this)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WINDOW: AJUSTES (Nexus System) -->
+    <div id="win-settings" class="aero-glass" style="width: 600px; height: 450px; top: 60px; left: 100px; display: none;">
+        <div class="window-header">
+            <div class="window-title"><i class="fas fa-cog text-gray-600"></i> Nexus System</div>
+            <div class="win-controls">
+                <div class="win-btn btn-min" onclick="minimizeWindow('settings')">_</div>
+                <div class="win-btn btn-max" onclick="maximizeWindow('settings')">□</div>
+                <div class="win-btn btn-close" onclick="closeWindow('settings')">×</div>
+            </div>
+        </div>
+        <div class="window-content" style="padding:0; margin:0; border:none; background: #f0f4fa; display: flex;">
+            <div class="w-1/3 bg-white border-r border-gray-200 flex flex-col pt-2">
+                <div class="settings-sidebar-item active" onclick="switchTab('personalization')">
+                    <i class="fas fa-paint-brush text-xl"></i> <div>Apariencia</div>
+                </div>
+                <div class="settings-sidebar-item" onclick="switchTab('system')">
+                    <i class="fas fa-desktop text-xl"></i> <div>Sistema</div>
+                </div>
+                <div class="settings-sidebar-item" onclick="switchTab('users')">
+                    <i class="fas fa-users text-xl"></i> <div>Cuentas</div>
+                </div>
+            </div>
+            <div class="w-2/3 p-4 overflow-y-auto">
+                <div id="tab-personalization" class="settings-section">
+                    <h2 class="text-xl text-blue-700 mb-4 border-b pb-2">Personalización</h2>
+                    <div class="setting-card">
+                        <label class="block font-bold mb-3 text-gray-600">Fondo de Pantalla</label>
+                        <div class="grid grid-cols-3 gap-2 mb-4 max-h-40 overflow-y-auto pr-1">
+                            <img src="all_assets/windows_7_style_aurora_abstract_background.png" class="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="changeBackground(this.src)">
+                            <img src="all_assets/frutiger_aero_aesthetic_collage.png" class="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="changeBackground(this.src)">
+                            <img src="all_assets/IMG-20251231-WA0015_1767228117468.jpg" class="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="changeBackground(this.src)">
+                            <img src="https://picsum.photos/id/29/1920/1080" class="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="changeBackground(this.src)">
+                            <img src="https://picsum.photos/id/28/1920/1080" class="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="changeBackground(this.src)">
+                             <img src="https://picsum.photos/id/10/1920/1080" class="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="changeBackground(this.src)">
+                            <img src="https://picsum.photos/id/16/1920/1080" class="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="changeBackground(this.src)">
+                            <img src="https://picsum.photos/id/54/1920/1080" class="w-full h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-blue-500" onclick="changeBackground(this.src)">
+                        </div>
+                    </div>
+                     <div class="setting-card">
+                        <label class="block font-bold mb-3 text-gray-600">Color Sólido</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="hex-input" placeholder="#008080" class="border p-2 rounded w-full text-sm font-mono uppercase" maxlength="7">
+                            <button onclick="applyHexColor()" class="glossy-btn py-1 px-3 text-sm">Aplicar</button>
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                             <div class="w-8 h-8 rounded-full cursor-pointer border shadow-sm" style="background:#000000" onclick="setHex('#000000')"></div>
+                             <div class="w-8 h-8 rounded-full cursor-pointer border shadow-sm" style="background:#ffffff" onclick="setHex('#ffffff')"></div>
+                             <div class="w-8 h-8 rounded-full cursor-pointer border shadow-sm" style="background:#ff5733" onclick="setHex('#ff5733')"></div>
+                             <div class="w-8 h-8 rounded-full cursor-pointer border shadow-sm" style="background:#33ff57" onclick="setHex('#33ff57')"></div>
+                             <div class="w-8 h-8 rounded-full cursor-pointer border shadow-sm" style="background:#3357ff" onclick="setHex('#3357ff')"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="tab-system" class="settings-section" style="display:none;">
+                    <h2 class="text-xl text-blue-700 mb-4 border-b pb-2">Sistema</h2>
+                    <div class="setting-card flex items-center gap-4">
+                        <i class="fab fa-windows text-5xl text-blue-400"></i>
+                        <div>
+                            <div class="font-bold text-lg">Frutiger Aero OS</div>
+                            <div class="text-gray-500 text-sm">Versión 2026.1 (Web)</div>
+                        </div>
+                    </div>
+                </div>
+                 <div id="tab-users" class="settings-section" style="display:none;">
+                    <h2 class="text-xl text-blue-700 mb-4 border-b pb-2">Cuentas</h2>
+                    <div class="setting-card flex items-center gap-3 bg-blue-50">
+                        <div class="w-12 h-12 rounded-full bg-white border flex items-center justify-center text-blue-400 text-2xl">
+                            <i class="fas fa-user-astronaut"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold">Admin</div>
+                            <div class="text-xs text-gray-500">Sesión Local</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WINDOW: CALCULADORA -->
+    <div id="win-calc" class="aero-glass" style="width: 240px; height: 320px; top: 100px; left: 100px; display: none;">
+         <div class="window-header">
+            <div class="window-title"><i class="fas fa-calculator text-green-500"></i> Calc</div>
+            <div class="win-controls">
+                <div class="win-btn btn-min" onclick="minimizeWindow('calc')">_</div>
+                <div class="win-btn btn-close" onclick="closeWindow('calc')">×</div>
+            </div>
+        </div>
+        <div class="window-content bg-gray-100 p-2 flex flex-col gap-2">
+             <div id="calc-display" class="bg-white border border-gray-300 h-10 rounded text-right p-2 text-xl font-mono mb-1 shadow-inner">0</div>
+             <div class="grid grid-cols-4 gap-1 flex-1">
+                 <button class="glossy-btn p-0 text-xs" onclick="calcInput('C')">C</button>
+                 <button class="glossy-btn p-0 text-xs" onclick="calcInput('/')">/</button>
+                 <button class="glossy-btn p-0 text-xs" onclick="calcInput('*')">x</button>
+                 <button class="glossy-btn p-0 text-xs" onclick="calcInput('-')">-</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('7')">7</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('8')">8</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('9')">9</button>
+                 <button class="glossy-btn p-0" onclick="calcInput('+')">+</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('4')">4</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('5')">5</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('6')">6</button>
+                 <button class="glossy-btn p-0 bg-yellow-100" onclick="calcInput('=')" style="grid-row:span 3">=</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('1')">1</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('2')">2</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('3')">3</button>
+                 <button class="glossy-btn p-0 font-bold col-span-2" onclick="calcInput('0')">0</button>
+                 <button class="glossy-btn p-0 font-bold" onclick="calcInput('.')">.</button>
+             </div>
+        </div>
+    </div>
+    
+    <!-- WINDOW: AEROVERSE (ENCICLOPEDIA ACTUALIZADA - EXTENDIDA) -->
+    <div id="win-info" class="aero-glass" style="width: 800px; height: 600px; top: 60px; left: 100px; display: none;">
+         <div class="window-header">
+            <div class="window-title"><i class="fas fa-globe-americas text-blue-500"></i> AeroVerse: La Enciclopedia</div>
+            <div class="win-controls">
+                <div class="win-btn btn-min" onclick="minimizeWindow('info')">_</div>
+                <div class="win-btn btn-max" onclick="maximizeWindow('info')">□</div>
+                <div class="win-btn btn-close" onclick="closeWindow('info')">×</div>
+            </div>
+        </div>
+        <div class="window-content bg-gray-50 p-0">
+            <div class="info-article p-8">
+                <!-- HERO HEADER -->
+                <div class="info-header">
+                    <h1 class="text-4xl font-bold mb-2">Frutiger Aero</h1>
+                    <p class="text-blue-100 opacity-90 font-medium">El optimismo tecnológico del cambio de milenio (2004-2013)</p>
+                </div>
+
+                <!-- DEFINICIÓN -->
+                <div class="info-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <i class="fas fa-book-open text-blue-500"></i> ¿Qué es Frutiger Aero?
+                    </h2>
+                    <p class="text-gray-700 mb-4">
+                        <b>Frutiger Aero</b> es un término acuñado en internet (específicamente en la comunidad de <i>Consumer Aesthetics Research Institute</i> o CARI) para describir una estética omnipresente en el diseño corporativo, la publicidad y la tecnología aproximadamente entre <b>2004 y 2013</b>.
+                    </p>
+                    <p class="text-gray-700 mb-4">
+                        El nombre combina dos elementos clave:
+                        <ul class="list-disc pl-8 mt-2 space-y-1">
+                            <li><b>Frutiger:</b> Por la familia tipográfica <i>Adrian Frutiger</i>, conocida por su legibilidad y humanismo, muy popular en esa época.</li>
+                            <li><b>Aero:</b> Por el lenguaje de diseño <i>Windows Aero</i> (Authentic, Energetic, Reflective, and Open) introducido en Windows Vista y 7.</li>
+                        </ul>
+                    </p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="info-tag">#HumanismoTecnológico</span>
+                        <span class="info-tag">#Skeuomorfismo</span>
+                        <span class="info-tag">#EcoFuturismo</span>
+                    </div>
+                </div>
+
+                <!-- ORÍGENES -->
+                <div class="info-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <i class="fas fa-history text-green-600"></i> Orígenes e Historia
+                    </h2>
+                    <p class="text-gray-700 mb-4">
+                        Frutiger Aero surgió como una evolución y refinamiento de la estética <b>Y2K</b> (finales de los 90s). Mientras que el Y2K era cromado, alienígena y a veces caótico, el Frutiger Aero buscaba ser más amigable, limpio y profesional.
+                    </p>
+                    <p class="text-gray-700">
+                        El lanzamiento de <b>Windows XP</b> (2001) con su fondo "Bliss" (la colina verde) plantó la semilla, pero el estilo explotó realmente con la llegada de las pantallas de alta definición (HD). Las empresas necesitaban demostrar que sus nuevas pantallas podían mostrar colores vibrantes y texturas complejas que el diseño plano no permitía.
+                    </p>
+                </div>
+
+                <!-- ANÁLISIS VISUAL -->
+                <div class="info-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <i class="fas fa-eye text-purple-500"></i> Análisis Visual
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-bold text-blue-600 mb-2">1. Skeuomorfismo (Realismo)</h3>
+                            <p class="text-sm text-gray-600">Los iconos y botones imitaban materiales del mundo real: vidrio, metal cepillado, cuero y plástico brillante. La idea era que si un botón digital parecía un botón físico, el usuario sabría instintivamente que podía "presionarlo".</p>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-green-600 mb-2">2. Naturaleza Humanista</h3>
+                            <p class="text-sm text-gray-600">A diferencia del Cyberpunk distópico, Frutiger Aero presentaba una simbiosis perfecta entre tecnología y naturaleza. Campos de hierba infinita, cielos azules sin nubes, gotas de rocío y peces tropicales nadando en pantallas.</p>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-cyan-500 mb-2">3. El Elemento Agua</h3>
+                            <p class="text-sm text-gray-600">El agua representa pureza y fluidez. Burbujas, salpicaduras y ondas eran omnipresentes para sugerir frescura y limpieza en el software.</p>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-yellow-500 mb-2">4. Auroras y Bokeh</h3>
+                            <p class="text-sm text-gray-600">Para los fondos abstractos, se usaban luces desenfocadas (bokeh) y ondas de energía suaves (auroras) que sugerían conectividad global y flujo de datos invisible pero inofensivo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBGÉNEROS -->
+                <div class="info-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-orange-500"></i> Subgéneros del Universo Aero
+                    </h2>
+                    <ul class="space-y-4">
+                        <li class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <b class="text-green-700">Frutiger Eco:</b> Enfocado exclusivamente en la sostenibilidad. Molinos de viento blancos, paneles solares brillantes, bombillas con hojas naciendo dentro y ciudades utópicas llenas de árboles.
+                        </li>
+                        <li class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <b class="text-indigo-700">Dark Aero:</b> La variante nocturna. Luces de neón azules sobre vidrio negro, ciudades nocturnas brillantes y una atmósfera más misteriosa y elegante, a menudo usada en software de edición o consolas "pro".
+                        </li>
+                        <li class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <b class="text-pink-600">Technozen:</b> Una mezcla de tecnología y spa. Piedras calientes apiladas, bambú, orquídeas y dispositivos electrónicos blancos en entornos de relajación total.
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- EL DECLIVE -->
+                <div class="info-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <i class="fas fa-arrow-down text-red-500"></i> El Declive (2012-2013)
+                    </h2>
+                    <p class="text-gray-700 mb-3">
+                        Hacia 2012, el Frutiger Aero comenzó a morir. La causa principal fue la saturación y la necesidad de eficiencia.
+                    </p>
+                    <div class="info-quote">
+                        "El diseño plano es más honesto. No intenta fingir ser algo que no es."
+                    </div>
+                    <p class="text-gray-700">
+                        Con la llegada de <b>Windows 8</b> y su interfaz "Metro" (bloques de colores sólidos) y posteriormente <b>iOS 7</b> de Apple (que eliminó todas las texturas de cuero y vidrio), el mundo adoptó el <b>Flat Design</b> (Diseño Plano). Las interfaces necesitaban escalar a miles de tamaños de pantalla diferentes (móviles, relojes, tablets), y las texturas pesadas del Aero eran difíciles de renderizar y adaptar.
+                    </p>
+                </div>
+
+                <!-- EL RENACIMIENTO -->
+                <div class="info-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                        <i class="fas fa-heart text-pink-500"></i> El Renacimiento Nostálgico
+                    </h2>
+                    <p class="text-gray-700 mb-3">
+                        Desde 2022, Frutiger Aero ha vuelto con fuerza gracias a la Generación Z en TikTok y YouTube. ¿Por qué?
+                    </p>
+                    <p class="text-gray-700">
+                        Representa una época en la que el futuro parecía <b>optimista</b>. Internet era un lugar divertido para explorar, no una obligación laboral. El diseño plano actual (Minimalismo Corporativo) se percibe a menudo como "frío", "estéril" y "deprimente". Frutiger Aero nos recuerda un tiempo donde la tecnología prometía salvarnos, no controlarnos.
+                    </p>
+                </div>
+
+                <div class="text-center text-xs text-gray-400 mt-8 mb-4 border-t pt-4">
+                    Investigación original por CARI & AeroVerse Team © 2026<br>
+                    Sistema Operativo Simulado v1.0
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TASKBAR -->
+    <div id="taskbar">
+        <div class="start-orb" title="Inicio" onclick="toggleStartMenu()"></div>
+        <div id="task-container" class="flex items-center h-full flex-1 gap-1 pl-2"></div>
+        <div class="tray">
+            <i class="fas fa-wifi text-white text-xs"></i>
+            <i class="fas fa-volume-up text-white text-xs"></i>
+            <div class="clock flex flex-col items-center leading-none">
+                <div id="clock-time" class="font-bold text-sm">12:00</div>
+                <div id="clock-date" style="font-size: 10px; opacity: 0.9;">01/01/26</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- LÓGICA --- */
+        let maxZ = 100;
+        let activeWindows = [];
+        let windowStates = {}; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setInterval(updateClock, 1000);
+            updateClock();
+            setupDraggables();
+        });
+
+        function login() { document.getElementById('login-screen').classList.add('hidden-login'); }
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock-time').textContent = `${hours}:${minutes}`;
+            document.getElementById('clock-date').textContent = now.toLocaleDateString();
+        }
+
+        /* Ventanas */
+        function openWindow(id) {
+            const win = document.getElementById(`win-${id}`);
+            if (!win) return;
+            win.style.display = 'flex';
+            setTimeout(() => win.style.opacity = '1', 10);
+            bringToFront(win);
+            if (!activeWindows.includes(id)) { activeWindows.push(id); addTaskbarItem(id); }
+            closeStartMenu();
+        }
+
+        function closeWindow(id) {
+            const win = document.getElementById(`win-${id}`);
+            win.style.opacity = '0';
+            setTimeout(() => { if(win) win.style.display = 'none'; }, 200);
+            activeWindows = activeWindows.filter(w => w !== id);
+            removeTaskbarItem(id);
+        }
+        function minimizeWindow(id) { document.getElementById(`win-${id}`).style.display = 'none'; }
+        function maximizeWindow(id) {
+            const win = document.getElementById(`win-${id}`);
+            bringToFront(win);
+            if (!windowStates[id]) windowStates[id] = { isMaximized: false };
+            if (windowStates[id].isMaximized) {
+                win.classList.remove('maximized'); win.style.top = windowStates[id].rect.top; win.style.left = windowStates[id].rect.left; win.style.width = windowStates[id].rect.width; win.style.height = windowStates[id].rect.height;
+                windowStates[id].isMaximized = false;
+            } else {
+                windowStates[id].rect = { top: win.style.top, left: win.style.left, width: win.style.width, height: win.style.height };
+                win.classList.add('maximized'); windowStates[id].isMaximized = true;
+            }
+        }
+        function toggleWindow(id) {
+            const win = document.getElementById(`win-${id}`);
+            if (win.style.display === 'none') { win.style.display = 'flex'; bringToFront(win); }
+            else { if (parseInt(win.style.zIndex) === maxZ) minimizeWindow(id); else bringToFront(win); }
+        }
+        function bringToFront(el) {
+            maxZ++; el.style.zIndex = maxZ;
+            document.querySelectorAll('.task-item').forEach(i => i.classList.remove('active'));
+            const t = document.getElementById(el.id.replace('win-', 'task-'));
+            if(t) t.classList.add('active');
+        }
+
+        /* Menú Inicio Lógica */
+        function toggleStartMenu() {
+            const menu = document.getElementById('start-menu');
+            const orb = document.querySelector('.start-orb');
+            
+            if(menu.style.display === 'flex') {
+                closeStartMenu();
+            } else {
+                menu.style.display = 'flex';
+                orb.classList.add('active');
+                bringToFront(menu);
+            }
+        }
+        
+        function closeStartMenu() {
+             const menu = document.getElementById('start-menu');
+             const orb = document.querySelector('.start-orb');
+             menu.style.display = 'none';
+             orb.classList.remove('active');
+        }
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('start-menu');
+            const orb = document.querySelector('.start-orb');
+            if (menu.style.display === 'flex' && !menu.contains(e.target) && !orb.contains(e.target)) {
+                closeStartMenu();
+            }
+        });
+
+        function addTaskbarItem(id) {
+            const c = document.getElementById('task-container');
+            const map = { 'info':'AeroVerse', 'player':'Música', 'calc':'Calc', 'gallery':'Fotos', 'settings':'Ajustes' };
+            const d = document.createElement('div');
+            d.className = 'task-item active'; d.id = `task-${id}`;
+            d.onclick = () => toggleWindow(id);
+            d.innerHTML = `<span class="task-text">${map[id] || id}</span>`;
+            c.appendChild(d);
+        }
+        function removeTaskbarItem(id) { const i = document.getElementById(`task-${id}`); if(i) i.remove(); }
+
+        /* Draggable */
+        function setupDraggables() {
+            document.querySelectorAll('.aero-glass').forEach(win => {
+                const h = win.querySelector('.window-header');
+                win.addEventListener('mousedown', () => bringToFront(win));
+                if(h) {
+                    h.addEventListener('mousedown', e => {
+                        if(win.classList.contains('maximized')) return;
+                        e.preventDefault();
+                        const shiftX = e.clientX - win.getBoundingClientRect().left;
+                        const shiftY = e.clientY - win.getBoundingClientRect().top;
+                        const onMove = ev => {
+                            let t = ev.clientY - shiftY; let l = ev.clientX - shiftX;
+                            if(t<0) t=0; win.style.top = t+'px'; win.style.left = l+'px';
+                        };
+                        const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+                        document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+                    });
+                }
+            });
+        }
+
+        /* APPS LOGIC */
+        function setPreview(img) {
+            document.getElementById('preview-img').src = img.src;
+            document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+            img.classList.add('active');
+        }
+        function switchTab(id) {
+            document.querySelectorAll('.settings-section').forEach(s => s.style.display='none');
+            document.getElementById(`tab-${id}`).style.display='block';
+            document.querySelectorAll('.settings-sidebar-item').forEach(i => i.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+        function changeBackground(src) { 
+            document.body.style.backgroundImage = `url('${src}')`;
+            document.body.style.backgroundColor = ''; // Limpiar color si es imagen
+        }
+        
+        function applyHexColor() {
+            const hex = document.getElementById('hex-input').value;
+            if(hex) {
+                 document.body.style.backgroundImage = 'none';
+                 document.body.style.backgroundColor = hex;
+            }
+        }
+        function setHex(color) {
+            document.getElementById('hex-input').value = color;
+            applyHexColor();
+        }
+        
+        let isPlay = false; let pInt;
+        function togglePlay() {
+            isPlay = !isPlay;
+            const btn = document.getElementById('play-btn');
+            const fill = document.getElementById('progress-fill');
+            const disc = document.getElementById('album-disc');
+            if(isPlay) {
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+                disc.style.animationPlayState = 'running';
+                let w = 0;
+                pInt = setInterval(() => { w++; if(w>100) w=0; fill.style.width = w+'%'; }, 100);
+            } else {
+                btn.innerHTML = '<i class="fas fa-play ml-1"></i>';
+                disc.style.animationPlayState = 'paused';
+                clearInterval(pInt);
+            }
+        }
+        
+        let cVal = '0';
+        function calcInput(v) {
+            const d = document.getElementById('calc-display');
+            if(v==='C') cVal='0';
+            else if(v==='=') { try { cVal=eval(cVal); } catch{cVal='Error'} }
+            else { if(cVal==='0') cVal=v; else cVal+=v; }
+            d.innerText = cVal;
+        }
+    </script>
+</body>
+</html>
